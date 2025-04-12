@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.0/dist/echarts.min.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.zhimg.com/element-ui@2.15.10/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.zhimg.com/element-ui@2.15.10/lib/index.js"></script>
+    <title>DL</title>
+</head>
+<body>
+    <div id="app" class="app">
+    <h4 class="MuiTypography-root MuiTypography-h4 css-z2oei0" style="margin-bottom: 32px;margin-top: 32px;">第三届Dleague日麻联赛</h4>
+    <h4 class="MuiTypography-root MuiTypography-h4 css-z2oei0" style="font-size: 10px;margin-bottom: 8px;">数据更新时间：{{update_time}}</h4>
+
+    <el-tabs v-model="activeName" @tab-click="handleClick">
+        <!--队伍排行-->
+            <el-tab-pane label="队伍排行" name="second">
+                <el-table
+                :data="teamData"
+                highlight-current-row
+                style="width: 100%"
+                :default-sort = "{prop: 'score', order: 'descending'}">
+                <el-table-column
+                type="index"
+                width="100">
+                </el-table-column>
+                <el-table-column
+                  prop="name"
+                  label="队伍名称"
+                  sortable
+                  width="200">
+                </el-table-column>
+                <el-table-column
+                  prop="score"
+                  label="总得分"
+                  sortable
+                  width="150">
+                </el-table-column>
+              </el-table>
+            </el-tab-pane>
+        <!--选手排行-->
+            <el-tab-pane label="选手排行" name="third">
+                <el-table
+                :data="playerData"
+                highlight-current-row
+                style="width: 100%"
+                :default-sort = "{prop: 'score', order: 'descending'}">
+                <el-table-column
+                type="index"
+                width="50">
+                </el-table-column>
+                <el-table-column
+                  prop="name"
+                  label="选手名称"
+                  sortable
+                  align="center"
+                  width="150">
+                <template slot-scope="scope">
+                    <el-link @click=clickplayer(scope.row.id) target="_blank" style="font-size: 15px;">{{scope.row.name}}</el-link>
+                </template>
+                </el-table-column>
+                <el-table-column
+                prop="team"
+                label="队伍"
+                sortable
+                align="center"
+                width="150">
+              </el-table-column>
+                <el-table-column
+                  prop="score"
+                  label="总得分"
+                  sortable
+                  align="center"
+                  width="100">
+                </el-table-column>
+                <el-table-column
+                  prop="cccs"
+                  label="出场次数"
+                  sortable
+                  :sort-method="(a,b)=>{return a.cccs - b.cccs}"
+                  align="center"
+                  width="100">
+                </el-table-column>
+                <el-table-column
+                  prop="hpl"
+                  label="胡牌率"
+                  :sort-method="(a,b)=>{return a.hpl - b.hpl}"
+                  sortable
+                  align="center"
+                  width="90">
+                  <template slot-scope="scope">
+                    {{ scope.row.hpl }}%
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="fcl"
+                  label="放铳率"
+                  :sort-method="(a,b)=>{return a.fcl - b.fcl}"
+                  sortable
+                  align="center"
+                  width="90">
+                  <template slot-scope="scope">
+                    {{ scope.row.fcl }}%
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="lzl"
+                  label="立直率"
+                  :sort-method="(a,b)=>{return a.lzl - b.lzl}"
+                  sortable
+                  align="center"
+                  width="90">
+                  <template slot-scope="scope">
+                    {{ scope.row.lzl }}%
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="fll"
+                  label="副露率"
+                  :sort-method="(a,b)=>{return a.fll - b.fll}"
+                  sortable
+                  align="center"
+                  width="90">
+                  <template slot-scope="scope">
+                    {{ scope.row.fll }}%
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="zml"
+                  label="自摸率"
+                  :sort-method="(a,b)=>{return a.zml - b.zml}"
+                  sortable
+                  align="center"
+                  width="90">
+                  <template slot-scope="scope">
+                    {{ scope.row.zml }}%
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="pjsw"
+                  label="平均顺位"
+                  :sort-method="(a,b)=>{return a.pjsw - b.pjsw}"
+                  sortable
+                  align="center"
+                  width="100">
+                </el-table-column>
+              </el-table>
+            </el-tab-pane>
+        <!--比赛章程-->
+            <el-tab-pane label="比赛章程" name="fourth">立直麻将超级联赛规则<br/>一、基础规则 （赛事 ID：437118）<br/>第 1 条 开始时间<br/>比赛时间为每个比赛日晚上 20:00，每晚进行 2 半庄，第一个半庄结束 30 分钟以内开始第二半庄比赛。<br/><br/>第 2 条 座位与原点<br/>四位参赛选手进入比赛场准备后，后台工作人员以雀魂随机座位方式开赛。对局开始时， 每位选手持有 25000 点，此为原点。南 4 结束时若有人持点达到 30000 点，当局比赛结束进行结算，若 4 家点数都未达到 30000 点时进入西风场。<br/><br/>第 3 条 持点、顺位点<br/>1. 持点超过 30,000 点以上的部分计为正分，不足的部分计为负分（-）。<br/><br/>2. 竞技顺位由半庄结束时合计得点的多少决定。<br/><br/>3. 顺位点指以半庄为单位，根据竞技顺位进行的分数加减。在本规则中，以以下方式<br/><br/>表示：<br/><br/>1 位+50,000 点 2 位+10,000 点 3 位-10,000 点 4 位-30,000 点<br/><br/>4. 持点与顺位点一同以 1000 点=1p 的比率进行换算，并统计为最终成绩。<br/><br/>【例】32,600 点的 2 位→+2.6p+10.0p（顺位点）=+12.6p<br/><br/>40,500 点的 1 位→+10.5p+50.0p（顺位点）=+60.5p<br/><br/>在此规则下，雀魂比赛场设置马点为 +45 +5 -15 -35。<br/><br/>半庄以流局结束时，场上的立直棒归 TOP 所有。<br/><br/>5. 半庄结束时若有多名玩家同点，则顺位点平分。3 人同点时，若顺位点无法整除， 则离起家最近的 1 人取较大余数。流局结束时的立直棒由同点者均分。3 人同点时， 1 根立直棒分为 400、300、300，由离起家最近的 1 人取 400。当立直棒点数无法 整除时，由此比例等倍计算。（例如立直棒有 2000 点时，分为 800、600、600）<br/><br/>【注】由于雀魂比赛场设定无法满足上述要求，当同分情况发生时按照上述计算方 式进行分数更正。<br/><br/>第 4 条 比赛场规则<br/>本届比赛全程采用以下规则：<br/><br/>1. 有提示（有便捷提示、有听牌提示）；<br/><br/>2. 无击飞（比赛中有选手负分时比赛继续，负分选手可正常立直）；<br/><br/>3. 有食断，赤宝牌 3 枚，5 万、5 筒、5 索各一张为赤牌；<br/><br/>4. 无途中流局（无九种九牌流局、无四风连打流局、无四杠散了流局、无四家立直流局）；<br/><br/>5. 加杠、大明杠，杠表宝牌即开；<br/><br/>6. 有流局满贯，有切上满贯（60 符 3 翻、30 符 4 翻 计切上满贯）；<br/><br/>7. 有一发，有头跳（某一张牌打出后，有多家进行和牌时，按照放铳者的下家、对家、上家之顺序优先和牌）；<br/><br/>8. 听牌罚符总计为 3000 点；<br/><br/>9. 顺位马为 1 位+45，2 位+5，三位-15，四位-35；<br/><br/>10. 有西入（南 4 结束后若 4 家点数都未超过 30000 时进入西 1 局，，从西 1 局开始只要非亲家点数超过 30000 时结束整局进行结算；若西 4 结束还没人满 30000 点，直接进行结算。）<br/><br/>11. 亲家和牌或听牌时连庄（包括南 4、西入亲家为 TOP 时，受限于雀魂规则，当选手听牌时不能盖牌下庄）；<br/><br/>12. 有多倍役满，有累计役满，有复合役满。<br/><br/>13. 长考时间为20+5秒<br/><br/>第 5 条 对局<br/>1. 选手有义务遵守本规则并保证公平竞争。<br/><br/>2. 如果在比赛中出现任何疑问，裁判应作出裁决，选手必须遵守该裁决。<br/><br/>3. 选手可以就对局中的任何疑问当场向裁判提出申诉，申述期限 3 天，过时无效。<br/><br/>第 6 条 裁判<br/>1. 由 RML 指定对麻将对局具备相关专业经验与知识的人才担任裁判。<br/><br/>2. 裁判具有执行竞赛规则并控制竞赛的义务。<br/><br/>3. 裁判在竞赛规则的范围内的内容拥有所有最终解释权，是比赛中任何疑问的最终仲裁者。在出现比赛规则范围之外的不可预见的情况时，裁判也有同样的权限。<br/><br/>4. 裁判有权暂停、恢复或结束一场竞赛。<br/><br/>第 7 条 队员<br/>参赛队伍的构成需要男女队员至少各一名。<br/><br/>队伍中成员若遭遇不可抗力原因需要替换，则需要提前一周，由队长将信息提交至组委会。组委会批准后，立即公示更换请求及新队员名单，组委会成员表决通过后在一周内完成新选手的注册登记。<br/><br/>本赛事最终解释权归主办方所有。<br/><br/>二、赛程安排<br/>本届比赛分为常规赛、季后赛、总决赛三个阶段。<br/><br/>每周三、四、六、日，进行四轮比赛，每晚两个半庄。各队伍自由安排选手出战，每晚可出场 1~2 人。<br/><br/>半庄积分结算：（半庄得点+顺位点-精算原点）/1000， 精算原点为 25000，精确至小数点后 1 位。<br/><br/>同队 4 人积分总和即为队伍积分，每个赛段结束时，晋级队伍积分*0.5 作为下个赛段初始积分，向高分精确至小数点后 1 位。<br/><br/>常规赛： 2 月 4 日 至 4 月 12 日，常规赛阶段每队需要进行 40 半庄比赛，为期 10 周。常规结束后积分前六的队伍晋级季后赛。<br/><br/>季后赛： 4 月 15 日 至 4 月 23 日，季后赛阶段每队需要进行 12 半庄比赛，为期 2 周。季后赛积分前四队伍进行总决赛。<br/><br/>总决赛： 4 月 29 日 至 5 月 3 日，四支决赛队伍进行 8 半庄的总冠军争夺战。<br/><br/>在各阶段比赛中，选手出场数量需要满足以下要求：<br/><br/>常规赛阶段选手最少出场 8 半庄，最多出场 12 半庄；<br/><br/>季后赛阶段选手最少出场 2 半庄，最多出场 4 半庄；<br/><br/>总决赛阶段每位选手需出场 2 半庄。<br/><br/>三、奖励<br/>赛事奖励<br/>冠军<br/>奖金 50000 元，冠军奖杯，<br/>队伍成员三亚三日豪华游<br/>（包食宿机票）<br/>10W 辉玉，<br/>冠军称号（限时）<br/>亚军<br/>奖金 30000 元<br/>6W 辉玉<br/>季军<br/>奖金 15000 元<br/>3W 辉玉<br/>第四名<br/>奖金 8000 元<br/>1W6 辉玉<br/>第五名<br/>奖金 6000 元<br/>1W2 辉玉<br/>第六名<br/>奖金 6000 元<br/>1W2 辉玉<br/>第七名<br/>奖金 4000 元<br/>8K 辉玉<br/>第八名<br/>奖金 4000 元<br/>8K 辉玉<br/>特殊成就<br/>常规赛 MVP<br/>奖金 5000 元<br/>10W 辉玉<br/>总决赛 MVP<br/>奖金 5000 元<br/>10W 辉玉<br/>半庄最高打点<br/>奖金 3000 元<br/>/<br/>役满大赏<br/>奖金 500 元<br/>/<br/>立超联赛@2022-2023</el-tab-pane>
+        <!--比赛对局-->
+            <el-tab-pane label="比赛对局" name="fifth">
+                <el-table
+      :data="roundData"
+      style="width: 100%"
+      :default-sort = "{prop: 'date', order: 'descending'}">
+      <el-table-column
+        prop="date"
+        label="日期"
+        sortable
+        width="200">
+      </el-table-column>
+      <el-table-column
+        prop="result"
+        label="对局结果">
+      </el-table-column>
+      <el-table-column
+        prop="link"
+        label="对局链接"
+        width="100">
+        <template slot-scope="scope">
+            <el-link class="el-icon-share" :href="scope.row.link" target="_blank" style="font-size: 20px;"></el-link>
+        </template>
+      </el-table-column>
+    </el-table>
+            </el-tab-pane>
+    </el-tabs>
+
+
+
+<!--对话框显示player详细信息-->
+
+
+<el-dialog title=" " :visible.sync="dialogTableVisible">
+    <h4 class="MuiTypography-root MuiTypography-h4 css-z2oei0">{{dname}}</h4>
+    <h5 style="text-align: center;">{{tname}}</h5>
+    <h5 class="MuiTypography-root MuiTypography-h5 css-saabsf">统计数据</h5>
+    
+    <div id="main" ref="chart" style="width: 600px;height:220px; margin:auto;margin-top: 16px;"></div>
+
+    
+    <div class="MuiBox-root css-1u3q4k3">
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">出场次数</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p" aria-label="">{{d0}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">总局数</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p" aria-label="">{{d1}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">总得点</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p" aria-label="">{{d2}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">和牌率</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p">{{d3}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">放铳率</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p">{{d4}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">自摸率</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p">{{d5}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">副露率</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p">{{d6}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">立直率</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p">{{d7}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">平均顺位</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p" aria-label="">{{d8}}</p>
+    </div>
+    </div>
+    
+    <h5 class="MuiTypography-root MuiTypography-h5 css-saabsf">对局记录</h5>
+    <div>
+        <el-table
+          :data="playerroundData"
+          highlight-current-row
+          style="width: 100%"
+          :default-sort = "{prop: 'date', order: 'descending'}">
+          <el-table-column
+            prop="date"
+            label="日期"
+            sortable
+            width="150">
+          </el-table-column>
+          <el-table-column
+            prop="place"
+            label="顺位"
+            sortable
+            width="100">
+          </el-table-column>
+          <el-table-column
+            prop="result"
+            label="对局结果">
+          </el-table-column>
+          <el-table-column
+            prop="link"
+            label="对局链接"
+            width="100">
+            <template slot-scope="scope">
+                <el-link class="el-icon-share" :href="scope.row.link" target="_blank" style="font-size: 20px;"></el-link>
+            </template>
+          </el-table-column>
+        </el-table>
+    </div>
+</el-dialog>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                update_time: '2025-04-12 16:24:15',
+                teamData: [{name: '汪汪队立大功',score: 0},{name: '爆☆杀麻雀格斗倶楽部',score: 0},{name: 'nzmzd对不队',score: 0},{name: '国士无双',score: 0},{name: '哈基土豆饼',score: 0},{name: '狂勇carry',score: 0},{name: '北极星Cassiopeia',score: 0},{name: '非日常麻雀结社',score: 0},],
+                playerData: [{name: '这就是郭楠',score: 0,team: '汪汪队立大功',id:'0'},{name: '断痕c无殇',score: 0,team: '汪汪队立大功',id:'1'},{name: '秀千代EC',score: 0,team: '汪汪队立大功',id:'2'},{name: 'kl3000official',score: 0,team: '汪汪队立大功',id:'3'},{name: '卢卢猹',score: 0,team: '爆☆杀麻雀格斗倶楽部',id:'4'},{name: '丿破风',score: 0,team: '爆☆杀麻雀格斗倶楽部',id:'5'},{name: '一只亚亚亚',score: 0,team: '爆☆杀麻雀格斗倶楽部',id:'6'},{name: '白子',score: 0,team: '爆☆杀麻雀格斗倶楽部',id:'7'},{name: '我爱手抓肉',score: 0,team: '国士无双',id:'8'},{name: '玄赤',score: 0,team: '国士无双',id:'9'},{name: '南风y',score: 0,team: '国士无双',id:'10'},{name: '白子',score: 0,team: '国士无双',id:'11'},{name: 'Hastur',score: 0,team: '哈基土豆饼',id:'12'},{name: 'IotatoJC',score: 0,team: '哈基土豆饼',id:'13'},{name: 'mudqpitty',score: 0,team: '哈基土豆饼',id:'14'},{name: '白子',score: 0,team: '哈基土豆饼',id:'15'},{name: '慷忾',score: 0,team: '狂勇carry',id:'16'},{name: 'Flamingo_li',score: 0,team: '狂勇carry',id:'17'},{name: '幸福的勇气',score: 0,team: '狂勇carry',id:'18'},{name: '小星今天吃什么',score: 0,team: '狂勇carry',id:'19'},{name: '林雨',score: 0,team: '北极星Cassiopeia',id:'20'},{name: 'NagatoYukki',score: 0,team: '北极星Cassiopeia',id:'21'},{name: '失去梦想皮皮虾',score: 0,team: '北极星Cassiopeia',id:'22'},{name: '白子',score: 0,team: '北极星Cassiopeia',id:'23'},{name: '唤灵',score: 0,team: '非日常麻雀结社',id:'24'},{name: '无望',score: 0,team: '非日常麻雀结社',id:'25'},{name: '白子',score: 0,team: '非日常麻雀结社',id:'26'},{name: '白子',score: 0,team: '非日常麻雀结社',id:'27'},{name: '洛铭轩',score: 0,team: 'nzmzd对不队',id:'28'},{name: '平地摔的saki',score: 0,team: 'nzmzd对不队',id:'29'},{name: '我想当理塘高手',score: 0,team: 'nzmzd对不队',id:'30'},{name: '白子',score: 0,team: 'nzmzd对不队',id:'31'},{name: '白子',score: 0,team: '电脑',id:'32'},],
+                roundData: [],
+                playerroundData: [],
+                playerdetailData: [[0, '这就是郭楠', '汪汪队立大功', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '断痕c无殇', '汪汪队立大功', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '秀千代EC', '汪汪队立大功', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, 'kl3000official', '汪汪队立大功', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '卢卢猹', '爆☆杀麻雀格斗倶楽部', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '丿破风', '爆☆杀麻雀格斗倶楽部', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '一只亚亚亚', '爆☆杀麻雀格斗倶楽部', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '白子', '爆☆杀麻雀格斗倶楽部', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '我爱手抓肉', '国士无双', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '玄赤', '国士无双', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '南风y', '国士无双', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '白子', '国士无双', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, 'Hastur', '哈基土豆饼', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, 'IotatoJC', '哈基土豆饼', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, 'mudqpitty', '哈基土豆饼', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '白子', '哈基土豆饼', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '慷忾', '狂勇carry', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, 'Flamingo_li', '狂勇carry', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '幸福的勇气', '狂勇carry', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '小星今天吃什么', '狂勇carry', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '林雨', '北极星Cassiopeia', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, 'NagatoYukki', '北极星Cassiopeia', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '失去梦想皮皮虾', '北极星Cassiopeia', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '白子', '北极星Cassiopeia', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '唤灵', '非日常麻雀结社', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '无望', '非日常麻雀结社', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '白子', '非日常麻雀结社', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '白子', '非日常麻雀结社', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '洛铭轩', 'nzmzd对不队', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '平地摔的saki', 'nzmzd对不队', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '我想当理塘高手', 'nzmzd对不队', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '白子', 'nzmzd对不队', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0'], [0, '白子', '电脑', '0', '0', '0', '0', '0', '0', '0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0']],
+                d0:0,
+                d1:0,
+                d2:0,
+                d3:0,
+                d4:0,
+                d5:0,
+                d6:0,
+                d7:0,
+                d8:0,
+                dname:0,
+                tname:0,
+                d11:0,
+                d12:0,
+                d13:0,
+                d14:0,
+                
+                dialogTableVisible: false,
+            activeName: 'second'
+            };
+        },
+         methods: {
+            handleClick(tab, event) {
+                console.log(tab, event);
+            },
+            clickplayer(id){
+                console.log(id)
+                id=parseInt(id)
+                this.d0=this.playerdetailData[id][0]
+                this.d1=this.playerdetailData[id][8]
+                this.d2=this.playerdetailData[id][9]
+                this.d3=this.playerdetailData[id][10]
+                this.d4=this.playerdetailData[id][11]
+                this.d5=this.playerdetailData[id][12]
+                this.d6=this.playerdetailData[id][13]
+                this.d7=this.playerdetailData[id][14]
+                this.d8=this.playerdetailData[id][15]
+                this.dname=this.playerdetailData[id][1]
+                this.tname=this.playerdetailData[id][2]
+                this.d11=this.playerdetailData[id][3]
+                this.d12=this.playerdetailData[id][4]
+                this.d13=this.playerdetailData[id][5]
+                this.d14=this.playerdetailData[id][6]
+                this.gen_player_round_data(id)
+                this.dialogTableVisible=!this.dialogTableVisible
+            },
+            gen_player_round_data(id){
+                var name=this.playerdetailData[id][1]
+                var res =new Array()
+                for(i=0;i<this.roundData.length;i++){
+                    if(this.roundData[i]['result'].indexOf(name)!=-1){
+                        var split=this.roundData[i]['result'].split('，')
+                        var place=''
+                        if(split[0].indexOf(name)!=-1) place='一'
+                        if(split[1].indexOf(name)!=-1) place='二'
+                        if(split[2].indexOf(name)!=-1) place='三'
+                        if(split[3].indexOf(name)!=-1) place='四'
+                        this.roundData[i]['place']=place
+                        res.push(this.roundData[i])
+                    }
+                }
+                this.playerroundData=res
+                console.log(res[0])
+            },
+            initChart(d1,d2,d3,d4){
+                // 基于准备好的dom，初始化echarts实例
+                //console.log(this.$refs.chart)
+                let myChart = echarts.init(this.$refs['chart']);
+                
+
+                // 指定图表的配置项和数据
+                var option = {
+                    series: [
+                        {
+                        type: 'pie',
+                        label: {
+                            formatter: '{name|{b}}\n{value|{d}%}',
+                            rich: {
+                                time: {
+                                fontSize: 10,
+                                color: '#999'
+                                }
+                            }
+                        },
+                    color: ['#28A745','#17A2B8','#E5D96C','#DC3848'],
+                    data: [
+                            {value: d1,name: '一位'},
+                            {value: d2,name: '二位'},
+                            {value: d3,name: '三位'},
+                            {value: d4,name: '四位'},
+                        ],
+                        radius: '75%'
+                        }
+                    ]
+                    };
+
+                // 使用刚指定的配置项和数据显示图表。
+                myChart.setOption(option);
+            },
+            addplayerdata(){
+                for(i=0;i<this.playerData.length;i++){
+                    this.playerData[i]['cccs']=this.playerdetailData[i][7]
+                    this.playerData[i]['hpl']=this.playerdetailData[i][10].slice(0,-1)
+                    this.playerData[i]['fcl']=this.playerdetailData[i][11].slice(0,-1)
+                    this.playerData[i]['zml']=this.playerdetailData[i][12].slice(0,-1)
+                    this.playerData[i]['fll']=this.playerdetailData[i][13].slice(0,-1)
+                    this.playerData[i]['lzl']=this.playerdetailData[i][14].slice(0,-1)
+                    this.playerData[i]['pjsw']=this.playerdetailData[i][15]
+                }
+
+            },
+        },
+        created(){
+            this.addplayerdata()
+        },
+        updated () {
+            this.$nextTick(()=>{this.initChart(this.d11,this.d12,this.d13,this.d14)} )
+        },
+        
+    })
+
+
+
+
+</script>
+
+
+</body>
+
+<style>
+    .el-row {
+      margin-bottom: 20px;
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+    .el-col {
+      border-radius: 4px;
+    }
+    .bg-purple-dark {
+      background: #99a9bf;
+    }
+    .bg-purple {
+      background: #d3dce6;
+    }
+    .bg-purple-light {
+      background: #e5e9f2;
+    }
+    .grid-content {
+      border-radius: 4px;
+      min-height: 36px;
+    }
+    .row-bg {
+      padding: 10px 0;
+      background-color: #f9fafc;
+    }
+    .css-1oney6p {
+    margin: 0px;
+    font-family: Roboto, "Microsoft YaHei", Meiryo, sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.25;
+    text-align: right;
+    }
+    .css-z2oei0 {
+        margin: 0px;
+        margin-top: 0px;
+        font-family: Roboto, "Microsoft YaHei", Meiryo, sans-serif;
+        font-weight: 400;
+        font-size: 2.2267rem;
+        line-height: 1.235;
+        text-align: center;
+    }
+    .app{
+    margin: auto;
+    width: 1100px;
+    }
+    .css-saabsf {
+    margin: 0px 0px 16px;
+    margin-top: 32px;
+    margin-bottom: 0px;
+    font-family: Roboto, "Microsoft YaHei", Meiryo, sans-serif;
+    font-weight: 400;
+    font-size: 1.6867rem;
+    line-height: 1.334;
+    text-align: center;
+}
+.css-1u3q4k3 {
+    grid-template-columns: repeat(2, min-content);
+}
+
+.css-1u3q4k3, .css-1u3q4k3 * {
+    user-select: none;
+}
+
+.css-1u3q4k3 {
+    display: grid;
+    -webkit-box-pack: justify;
+    justify-content: space-between;
+    gap: 12px;
+    /*grid-template-columns: 1fr;*/
+    width: 500px;
+    margin: auto;
+    margin-top: 0px;
+}
+
+.css-gg4vpm {
+    display: flex;
+    -webkit-box-pack: justify;
+    justify-content: space-between;
+    width: 150px;
+}
+
+.css-lrbsr7 {
+    margin: 0px;
+    font-family: Roboto, "Microsoft YaHei", Meiryo, sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    overflow: hidden;
+    white-space: nowrap;
+    line-height: 1.25;
+    text-overflow: initial;
+}
+
+  </style>
+</html>
