@@ -13,4 +13,4 @@ team_init_score=[0,0,0,0,0,0,0,0]
 # 队伍名称
 team_name=['汪汪队立大功','爆☆杀麻雀格斗倶楽部','nzmzd对不队','国士无双','哈基土豆咸水饼','狂勇carry','北极星Cassiopeia','非日常麻雀结社']
 # 参赛人员数量(实际数量+1)
-player_number=32+1
+player_number=40+1
